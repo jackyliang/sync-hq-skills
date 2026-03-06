@@ -4,11 +4,26 @@ Claude Code plugin for integrating [sync_hq](https://github.com/jackyliang/sync_
 
 ## Install
 
-```bash
-# From the Claude Code CLI
-/plugin install --dir /path/to/sync-hq-skills
+### From GitHub (recommended)
 
-# Or load for a single session
+```bash
+# In Claude Code, run:
+/plugin install github:jackyliang/sync-hq-skills
+```
+
+### From a local clone
+
+```bash
+# Clone the repo
+git clone https://github.com/jackyliang/sync-hq-skills.git
+
+# Install from local directory
+/plugin install --dir ./sync-hq-skills
+```
+
+### For a single session (no install)
+
+```bash
 claude --plugin-dir /path/to/sync-hq-skills
 ```
 
