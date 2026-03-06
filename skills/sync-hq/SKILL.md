@@ -67,7 +67,7 @@ curl -X POST $SYNC_HQ_API_URL/v1/connections/confirm \
 curl -X POST $SYNC_HQ_API_URL/v1/syncs \
   -H "X-API-Key: $SYNC_HQ_API_KEY" \
   -H "Content-Type: application/json" \
-  -d '{"connection_id": "<connection_id>", "resources": ["tickets", "users"]}'
+  -d '{"connection_id": "<connection_id>", "resources": ["tickets", "articles"]}'
 
 # Trigger sync (runs in background)
 curl -X POST $SYNC_HQ_API_URL/v1/syncs/<sync_state_id>/trigger \
@@ -113,8 +113,9 @@ Events: `sync.completed`, `sync.failed`, `connection.created`, `connection.delet
 Synced data lands in per-end-user schemas:
 ```
 sync_{dev_prefix}_{end_user_id}.tickets
-sync_{dev_prefix}_{end_user_id}.users
-sync_{dev_prefix}_{end_user_id}.organizations
+sync_{dev_prefix}_{end_user_id}.articles
+sync_{dev_prefix}_{end_user_id}.sections
+sync_{dev_prefix}_{end_user_id}.categories
 ```
 
 All columns are TEXT except `id` (PK) and `_synced_at` (TIMESTAMPTZ, auto-set). Cast when querying typed data.
@@ -145,10 +146,10 @@ sync_hq focuses on syncing **knowledge-base content** — data that helps AI age
 **When setting up syncs, ask the user which resources they actually need.** Present the available resources and help them choose based on their use case. Default to knowledge-oriented resources (tickets, articles, help center content) rather than syncing everything.
 
 **Example prompt:**
-> "Zendesk has these available resources: tickets, articles, sections, categories, users, organizations. Which ones does your AI agent need? For a support assistant, I'd recommend tickets and articles (help center content)."
+> "Zendesk has these available resources: tickets, articles, sections, categories. Which ones does your AI agent need? For a support assistant, I'd recommend tickets and articles."
 
 ## Available Providers
 
-| Provider | Resources | Recommended for AI |
-|----------|-----------|-------------------|
-| `zendesk` | `tickets`, `articles`, `sections`, `categories`, `users`, `organizations` | `tickets`, `articles` |
+| Provider | Resources |
+|----------|-----------|
+| `zendesk` | `tickets`, `articles`, `sections`, `categories` |
