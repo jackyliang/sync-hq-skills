@@ -17,6 +17,12 @@ sync_hq syncs third-party data (Zendesk, etc.) into Postgres so AI agents can qu
 - **Hosted (default)** — Synced data lives in sync_hq's cloud. Read it via API.
 - **BYOP (Bring Your Own Postgres)** — Synced data writes to YOUR database. Query it natively with joins, pgvector, full-text search. See [byop-guide.md](byop-guide.md).
 
+**IMPORTANT:** Before starting integration work, ask the user which mode they want:
+> "Do you want synced data stored in sync_hq's hosted database (read via API), or written directly to your own Postgres (BYOP)?"
+>
+> - **Hosted** → Follow the standard workflow below. Data read via `GET /v1/data/...`.
+> - **BYOP** → Set up your database first (see [byop-guide.md](byop-guide.md)), then follow the same workflow. Data queried directly from your Postgres.
+
 ## Prerequisites
 
 1. Log in via WorkOS AuthKit (`GET /v1/auth/login`) — account + API key created on first login
