@@ -19,6 +19,9 @@ sync_hq syncs third-party data (Zendesk, etc.) into Postgres so AI agents can qu
 
 ## Prerequisites
 
+1. Log in via WorkOS AuthKit (`GET /v1/auth/login`) — account + API key created on first login
+2. Set environment variables:
+
 ```
 SYNC_HQ_API_URL=https://api.sync-hq.com   # or http://localhost:8000
 SYNC_HQ_API_KEY=sk_live_...

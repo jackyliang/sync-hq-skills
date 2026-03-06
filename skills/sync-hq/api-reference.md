@@ -2,14 +2,23 @@
 
 All endpoints require `X-API-Key` header unless noted.
 
+## Auth Endpoints (WorkOS AuthKit)
+
+#### GET /v1/auth/login
+Get WorkOS authorization URL. **No auth required.** Redirect user to the returned URL.
+
+#### GET /v1/auth/callback
+Handle OAuth callback. Creates user + developer + API key on first login. **No auth required.**
+
+#### GET /v1/auth/me
+Get current user + org memberships. **Requires session cookie.**
+
+#### POST /v1/auth/logout
+Clear session cookie.
+
+---
+
 ## Developer Endpoints
-
-#### POST /v1/developers/signup
-Create account. **No auth required.**
-
-Request: `{"email": "you@example.com", "name": "Your Name"}`
-
-Response (201): `{"developer": {"id": "uuid", ...}, "api_key": "sk_live_..."}`
 
 #### GET /v1/developers/me
 Get developer profile. Response: `{"id": "uuid", "email": "...", "name": "...", "is_active": true}`
