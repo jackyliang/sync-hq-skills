@@ -70,6 +70,21 @@ Test OAuth token health. Response: `{"healthy": true}` or `{"healthy": false, "e
 #### PUT /v1/connections/{connection_id}/scope
 Update selected resources. Request: `{"resources": ["tickets", "users"]}`. Response: ConnectionResponse.
 
+#### GET /v1/connections/events
+List OAuth lifecycle events. Use to monitor when end users start, complete, or fail connecting their accounts.
+
+Query params: `end_user_id`, `provider`, `event` (`oauth_started`, `oauth_completed`, `oauth_failed`), `limit` (50), `offset` (0).
+
+Response:
+```json
+{
+  "items": [
+    {"id": "uuid", "end_user_id": "customer_123", "provider": "zendesk", "event": "oauth_failed", "message": "Connection not found in Nango", "created_at": "..."}
+  ],
+  "total": 5, "limit": 50, "offset": 0
+}
+```
+
 ---
 
 ## Sync Endpoints
