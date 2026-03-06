@@ -1,0 +1,138 @@
+# sync_hq Recipes
+
+## Connect Zendesk and start syncing
+
+```bash
+# 1. Start OAuth
+curl -X POST $SYNC_HQ_API_URL/v1/connections/oauth \
+  -H "X-API-Key: $SYNC_HQ_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"end_user_id": "customer_123", "provider": "zendesk"}'
+# → Redirect customer to connect_link
+
+# 2. Confirm after OAuth
+curl -X POST $SYNC_HQ_API_URL/v1/connections/confirm \
+  -H "X-API-Key: $SYNC_HQ_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"end_user_id": "customer_123", "provider": "zendesk"}'
+# → Save connection id
+
+# 3. Create sync
+curl -X POST $SYNC_HQ_API_URL/v1/syncs \
+  -H "X-API-Key: $SYNC_HQ_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"connection_id": "<id>", "resources": ["tickets"]}'
+
+# 4. Trigger and schedule
+curl -X POST $SYNC_HQ_API_URL/v1/syncs/<sync_state_id>/trigger \
+  -H "X-API-Key: $SYNC_HQ_API_KEY"
+
+curl -X PUT $SYNC_HQ_API_URL/v1/syncs/<sync_state_id>/schedule \
+  -H "X-API-Key: $SYNC_HQ_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"schedule_enabled": true, "interval_minutes": 60}'
+```
+
+## Set up BYOP (Bring Your Own Postgres)
+
+```bash
+# 1. Test your Postgres URL
+curl -X POST $SYNC_HQ_API_URL/v1/settings/database/test \
+  -H "X-API-Key: $SYNC_HQ_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"url": "postgresql://sync_hq_writer:pass@db.supabase.co:5432/mydb"}'
+
+# 2. Save it (encrypted at rest)
+curl -X PUT $SYNC_HQ_API_URL/v1/settings/database \
+  -H "X-API-Key: $SYNC_HQ_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"url": "postgresql://sync_hq_writer:pass@db.supabase.co:5432/mydb"}'
+
+# 3. Register webhooks
+curl -X POST $SYNC_HQ_API_URL/v1/settings/webhooks \
+  -H "X-API-Key: $SYNC_HQ_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://yourapp.com/webhooks/sync-hq", "description": "Sync events"}'
+
+# 4. Connect providers and sync as usual — data now lands in YOUR database
+```
+
+## Debugging a Failed Sync
+
+When a sync fails (or you receive a `sync.failed` webhook):
+
+```bash
+# 1. Check sync status — see last error, retry count, recent runs
+curl $SYNC_HQ_API_URL/v1/syncs/<sync_state_id>/status \
+  -H "X-API-Key: $SYNC_HQ_API_KEY"
+
+# 2. Read detailed logs — event-level detail
+curl "$SYNC_HQ_API_URL/v1/syncs/<sync_state_id>/logs?level=error" \
+  -H "X-API-Key: $SYNC_HQ_API_KEY"
+
+# 3. Test connection health — is the OAuth token still valid?
+curl -X POST $SYNC_HQ_API_URL/v1/connections/<connection_id>/test \
+  -H "X-API-Key: $SYNC_HQ_API_KEY"
+
+# 4. Check admin overview — see failures across all connections
+curl $SYNC_HQ_API_URL/v1/admin/health \
+  -H "X-API-Key: $SYNC_HQ_API_KEY"
+```
+
+Logs and sync metadata always live in sync_hq's cloud, even with BYOP.
+
+**Webhook handler example:**
+
+```python
+@router.post("/webhooks/sync-hq")
+async def handle_sync_event(payload: dict):
+    match payload["type"]:
+        case "sync.completed":
+            schema = payload["schema_name"]
+            resource = payload["resource"]
+            await rebuild_search_index(schema, resource)
+
+        case "sync.failed":
+            # Fetch detailed error info
+            status = await sync_hq_client.get(
+                f"/v1/syncs/{payload['sync_state_id']}/status"
+            )
+            await alert_admin(
+                end_user=payload["end_user_id"],
+                error=payload["error"],
+                retry_count=status["retry_count"],
+            )
+
+        case "connection.deleted":
+            await cleanup_synced_data(payload["end_user_id"])
+```
+
+## Check connection health
+
+```bash
+# Overview of all connections
+curl $SYNC_HQ_API_URL/v1/admin/health \
+  -H "X-API-Key: $SYNC_HQ_API_KEY"
+
+# Test a specific connection
+curl -X POST $SYNC_HQ_API_URL/v1/connections/<connection_id>/test \
+  -H "X-API-Key: $SYNC_HQ_API_KEY"
+```
+
+## Set up hourly sync with webhooks
+
+```bash
+# 1. Register webhook
+curl -X POST $SYNC_HQ_API_URL/v1/settings/webhooks \
+  -H "X-API-Key: $SYNC_HQ_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://yourapp.com/webhooks/sync", "description": "Sync notifications"}'
+
+# 2. Enable scheduling
+curl -X PUT $SYNC_HQ_API_URL/v1/syncs/<sync_state_id>/schedule \
+  -H "X-API-Key: $SYNC_HQ_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"schedule_enabled": true, "interval_minutes": 60}'
+
+# Sync runs every hour → webhook fires → your app reacts
+```

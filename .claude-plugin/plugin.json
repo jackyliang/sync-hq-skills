@@ -1,0 +1,11 @@
+{
+  "name": "sync-hq",
+  "description": "Integrate sync_hq into your app — sync third-party data (Zendesk, etc.) into Postgres for AI agents to query directly",
+  "version": "2.0.0",
+  "author": {
+    "name": "Jacky Liang"
+  },
+  "homepage": "https://github.com/jackyliang/sync-hq-skills",
+  "repository": "https://github.com/jackyliang/sync-hq-skills",
+  "license": "MIT"
+}
