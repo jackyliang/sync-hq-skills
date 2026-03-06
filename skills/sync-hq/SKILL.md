@@ -138,8 +138,17 @@ All columns are TEXT except `id` (PK) and `_synced_at` (TIMESTAMPTZ, auto-set). 
 - **BYOP setup and querying**: See [byop-guide.md](byop-guide.md)
 - **Recipes and troubleshooting**: See [recipes.md](recipes.md)
 
+## Choosing Resources to Sync
+
+sync_hq focuses on syncing **knowledge-base content** — data that helps AI agents answer questions. Not every available resource is useful.
+
+**When setting up syncs, ask the user which resources they actually need.** Present the available resources and help them choose based on their use case. Default to knowledge-oriented resources (tickets, articles, help center content) rather than syncing everything.
+
+**Example prompt:**
+> "Zendesk has these available resources: tickets, articles, sections, categories, users, organizations. Which ones does your AI agent need? For a support assistant, I'd recommend tickets and articles (help center content)."
+
 ## Available Providers
 
-| Provider | Resources |
-|----------|-----------|
-| `zendesk` | `tickets`, `users`, `organizations` |
+| Provider | Resources | Recommended for AI |
+|----------|-----------|-------------------|
+| `zendesk` | `tickets`, `articles`, `sections`, `categories`, `users`, `organizations` | `tickets`, `articles` |
