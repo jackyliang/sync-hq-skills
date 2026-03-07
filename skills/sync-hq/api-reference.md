@@ -59,7 +59,7 @@ Response: `{"items": [...], "total": 42, "limit": 50, "offset": 0}`
 Get specific connection.
 
 #### DELETE /v1/connections/{end_user_id}/{provider}
-Delete connection from Nango and local DB. Response: `{"status": "deleted", ...}`
+Delete connection from Nango and local DB. **Also drops all synced resource tables from the BYOP database.** If no other connections share the same schema (same developer + end_user), the schema is dropped too. The connection is marked as `deleting` during cleanup to block new connections for the same end_user+provider until cleanup completes. Response: `{"status": "deleted", ...}`
 
 #### GET /v1/connections/{connection_id}/available-resources
 List syncable resources. Response: `{"resources": ["tickets", "users", "organizations"]}`

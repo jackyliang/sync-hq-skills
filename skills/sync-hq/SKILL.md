@@ -120,6 +120,24 @@ sync_{dev_prefix}_{end_user_id}.categories
 
 All columns are TEXT except `id` (PK) and `_synced_at` (TIMESTAMPTZ, auto-set). Cast when querying typed data.
 
+### Step 5: Disconnect a Provider
+
+```bash
+curl -X DELETE $SYNC_HQ_API_URL/v1/connections/{end_user_id}/{provider} \
+  -H "X-API-Key: $SYNC_HQ_API_KEY"
+```
+
+**This automatically:**
+1. Marks the connection as `deleting` (blocks new connections for same end_user+provider)
+2. Drops all synced resource tables from the BYOP database
+3. Drops the schema if no other connections share it
+4. Deletes all sync metadata (sync_states, sync_runs, sync_logs)
+5. Deletes the connection record
+
+**No manual SQL cleanup needed.** All synced data is removed automatically.
+
+**409 on reconnect:** If you try to confirm a new connection while a previous one is still being cleaned up, you'll get a `409 Conflict`. Retry shortly.
+
 ## Error Handling
 
 | Code | Meaning |
@@ -128,7 +146,7 @@ All columns are TEXT except `id` (PK) and `_synced_at` (TIMESTAMPTZ, auto-set). 
 | 400 | Bad request (BYOP users calling data read API) |
 | 401 | Missing or invalid API key |
 | 404 | Connection or sync not found |
-| 409 | Conflict (sync already running, DB URL change blocked) |
+| 409 | Conflict (sync already running, DB URL change blocked, or connection still being cleaned up) |
 | 422 | Invalid input (bad Postgres URL) |
 | 429 | Rate limited (100 req/min) |
 | 502 | Provider/Nango error |

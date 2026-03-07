@@ -118,18 +118,24 @@ Hosted users can skip this — use `GET /v1/connections?end_user_id=X` instead.
 
 ## Disconnecting & Cleanup
 
-`DELETE /v1/connections/{end_user_id}/{provider}` removes the connection but does NOT drop synced data. BYOP users must clean up their own database.
+`DELETE /v1/connections/{end_user_id}/{provider}` removes the connection **and automatically drops all synced resource tables** from the BYOP database. If no other connections share the schema (same developer + end_user), the entire schema is dropped too.
 
-**Teardown sequence:**
+The connection is marked as `deleting` during cleanup. While in this state, `POST /v1/connections/confirm` for the same end_user+provider returns **409 Conflict**. This prevents race conditions where a new connection is created before cleanup finishes.
 
-1. Delete syncs: `GET /v1/syncs?end_user_id=X` → `DELETE /v1/syncs/{id}` for each
-2. Delete connection: `DELETE /v1/connections/{end_user_id}/{provider}`
-3. Remove local tracking row
-4. Drop synced data:
+**Teardown sequence (handled automatically by the DELETE endpoint):**
 
-```sql
--- Drop the schema (check for other providers first!)
-DROP SCHEMA IF EXISTS sync_abcd1234_customer_123 CASCADE;
+1. Connection marked as `deleting` (blocks new connections)
+2. Nango connection deleted (best-effort)
+3. Synced resource tables dropped from BYOP database
+4. Schema dropped if no other connections share it
+5. sync_logs, sync_runs, sync_states deleted
+6. Connection record deleted
+
+**No manual SQL cleanup needed.** Just call:
+
+```bash
+curl -X DELETE $SYNC_HQ_API_URL/v1/connections/{end_user_id}/{provider} \
+  -H "X-API-Key: $SYNC_HQ_API_KEY"
 ```
 
 **Safety:** If the end user has multiple providers (Zendesk + another), they share the schema. Only drop it when ALL connections for that end user are removed.

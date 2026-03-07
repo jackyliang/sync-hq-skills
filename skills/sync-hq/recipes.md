@@ -104,7 +104,9 @@ async def handle_sync_event(payload: dict):
             )
 
         case "connection.deleted":
-            await cleanup_synced_data(payload["end_user_id"])
+            # Synced data is automatically dropped by sync_hq on disconnect.
+            # Use this hook to clean up your own app state (e.g., remove search indexes).
+            await on_connection_removed(payload["end_user_id"])
 ```
 
 ## Check connection health
