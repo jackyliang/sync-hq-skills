@@ -90,7 +90,11 @@ Response:
 ## Sync Endpoints
 
 #### POST /v1/syncs
-Create sync states. Request: `{"connection_id": "uuid", "resources": ["tickets", "users"]}`
+Create sync states. **Auto-schedules syncs** with appropriate intervals based on resource type. Request: `{"connection_id": "uuid", "resources": ["tickets", "users"]}`
+
+Sync states are created with `schedule_enabled=True` and:
+- **5-minute interval** for `tickets` and `articles` (incremental sync — only fetches changes)
+- **60-minute interval** for `sections` and `categories` (full fetch)
 
 Response (202):
 ```json
@@ -99,6 +103,8 @@ Response (202):
   "sync_states": [{"sync_state_id": "uuid", "resource": "tickets", "status": "idle"}, ...]
 }
 ```
+
+**Delete handling (BYOP):** For tickets, when a record is deleted in Zendesk, the incremental export reports it as deleted. sync_hq automatically removes the corresponding row from the BYOP table.
 
 #### POST /v1/syncs/{sync_state_id}/trigger
 Trigger sync (202, background). Returns 409 if already running.
@@ -116,7 +122,7 @@ Sync status with recent runs.
 List syncs. Query params: `end_user_id`, `status`, `limit` (50), `offset` (0).
 
 #### PUT /v1/syncs/{sync_state_id}/schedule
-Enable auto-sync. Request: `{"schedule_enabled": true, "interval_minutes": 60}`
+Override auto-sync schedule. Syncs are auto-scheduled on creation (see POST /v1/syncs), but this endpoint lets you customize. Request: `{"schedule_enabled": true, "interval_minutes": 60}`
 
 #### GET /v1/syncs/{sync_state_id}/logs
 Sync run logs. Query params: `level`, `limit` (100), `offset` (0).

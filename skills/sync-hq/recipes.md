@@ -17,20 +17,21 @@ curl -X POST $SYNC_HQ_API_URL/v1/connections/confirm \
   -d '{"end_user_id": "customer_123", "provider": "zendesk"}'
 # → Save connection id
 
-# 3. Create sync
+# 3. Create sync (auto-scheduled: tickets every 5min, sections/categories every 60min)
 curl -X POST $SYNC_HQ_API_URL/v1/syncs \
   -H "X-API-Key: $SYNC_HQ_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{"connection_id": "<id>", "resources": ["tickets"]}'
 
-# 4. Trigger and schedule
+# 4. Trigger initial sync
 curl -X POST $SYNC_HQ_API_URL/v1/syncs/<sync_state_id>/trigger \
   -H "X-API-Key: $SYNC_HQ_API_KEY"
 
-curl -X PUT $SYNC_HQ_API_URL/v1/syncs/<sync_state_id>/schedule \
-  -H "X-API-Key: $SYNC_HQ_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{"schedule_enabled": true, "interval_minutes": 60}'
+# Auto-scheduling is on by default. To customize:
+# curl -X PUT $SYNC_HQ_API_URL/v1/syncs/<sync_state_id>/schedule \
+#   -H "X-API-Key: $SYNC_HQ_API_KEY" \
+#   -H "Content-Type: application/json" \
+#   -d '{"schedule_enabled": true, "interval_minutes": 30}'
 ```
 
 ## Set up BYOP (Bring Your Own Postgres)
@@ -121,20 +122,25 @@ curl -X POST $SYNC_HQ_API_URL/v1/connections/<connection_id>/test \
   -H "X-API-Key: $SYNC_HQ_API_KEY"
 ```
 
-## Set up hourly sync with webhooks
+## Set up webhooks for sync events
+
+Syncs are auto-scheduled on creation (tickets/articles every 5min, sections/categories every 60min). To receive notifications when syncs complete or fail, register a webhook:
 
 ```bash
-# 1. Register webhook
+# Register webhook
 curl -X POST $SYNC_HQ_API_URL/v1/settings/webhooks \
   -H "X-API-Key: $SYNC_HQ_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{"url": "https://yourapp.com/webhooks/sync", "description": "Sync notifications"}'
 
-# 2. Enable scheduling
+# Syncs run on their auto-schedule → webhook fires → your app reacts
+```
+
+To customize the schedule for a specific sync, use `PUT /v1/syncs/<sync_state_id>/schedule`:
+
+```bash
 curl -X PUT $SYNC_HQ_API_URL/v1/syncs/<sync_state_id>/schedule \
   -H "X-API-Key: $SYNC_HQ_API_KEY" \
   -H "Content-Type: application/json" \
-  -d '{"schedule_enabled": true, "interval_minutes": 60}'
-
-# Sync runs every hour → webhook fires → your app reacts
+  -d '{"schedule_enabled": true, "interval_minutes": 30}'
 ```

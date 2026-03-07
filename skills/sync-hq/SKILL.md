@@ -63,22 +63,31 @@ curl -X POST $SYNC_HQ_API_URL/v1/connections/confirm \
 ### Step 2: Create and Trigger a Sync
 
 ```bash
-# Create sync states
+# Create sync states (auto-scheduled — no manual schedule step needed)
 curl -X POST $SYNC_HQ_API_URL/v1/syncs \
   -H "X-API-Key: $SYNC_HQ_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{"connection_id": "<connection_id>", "resources": ["tickets", "articles"]}'
 
-# Trigger sync (runs in background)
+# Trigger initial sync (runs in background)
 curl -X POST $SYNC_HQ_API_URL/v1/syncs/<sync_state_id>/trigger \
   -H "X-API-Key: $SYNC_HQ_API_KEY"
+```
 
-# Optional: enable hourly auto-sync
+**Auto-scheduling:** Syncs are automatically scheduled when created:
+- **Tickets and articles** — every 5 minutes (incremental sync, fetches only changes)
+- **Sections and categories** — every 60 minutes (full fetch)
+
+To override the default schedule, use `PUT /v1/syncs/{sync_state_id}/schedule`:
+
+```bash
 curl -X PUT $SYNC_HQ_API_URL/v1/syncs/<sync_state_id>/schedule \
   -H "X-API-Key: $SYNC_HQ_API_KEY" \
   -H "Content-Type: application/json" \
-  -d '{"schedule_enabled": true, "interval_minutes": 60}'
+  -d '{"schedule_enabled": true, "interval_minutes": 30}'
 ```
+
+**Incremental sync:** Tickets and articles use incremental sync — after the initial full fetch, subsequent syncs only retrieve records that changed since the last sync. This is faster and uses fewer API calls. Sections and categories always do a full fetch.
 
 ### Step 3: Read Synced Data
 

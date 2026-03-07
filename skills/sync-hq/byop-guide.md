@@ -79,6 +79,19 @@ Get your developer_id: `GET /v1/developers/me` → `id` field.
 - `_synced_at` TIMESTAMPTZ is auto-added (set on each upsert)
 - Tables are dynamic: created on first sync, new columns may appear if the provider adds fields
 
+**Sync behavior by resource:**
+
+| Resource | Sync type | Interval | Deletes auto-removed? |
+|----------|-----------|----------|-----------------------|
+| `tickets` | Incremental (changes only) | 5 min | Yes |
+| `articles` | Incremental (changes only) | 5 min | No |
+| `sections` | Full fetch | 60 min | No |
+| `categories` | Full fetch | 60 min | No |
+
+- **Incremental sync** (tickets, articles): After the initial full fetch, only records that changed since the last sync are fetched. Much faster and uses fewer API calls.
+- **Full fetch** (sections, categories): All records are fetched every time.
+- **Delete handling** (tickets only): When a ticket is deleted in Zendesk, the incremental export includes it as deleted. sync_hq automatically removes the row from your BYOP table. Other resources do not currently detect deletes.
+
 ## Querying Synced Data
 
 ```sql
