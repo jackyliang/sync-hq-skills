@@ -114,7 +114,7 @@ Sync status with recent runs.
 ```json
 {
   "sync_state_id": "uuid", "status": "idle", "last_cursor": "...", "retry_count": 0,
-  "recent_runs": [{"id": "uuid", "status": "completed", "records_fetched": 150, "records_written": 150}]
+  "recent_runs": [{"id": "uuid", "status": "completed", "records_fetched": 150, "records_written": 150, "records_deleted": 0}]
 }
 ```
 
