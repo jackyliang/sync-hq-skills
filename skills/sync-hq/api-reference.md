@@ -93,8 +93,8 @@ Response:
 Create sync states. **Auto-schedules syncs** with appropriate intervals based on resource type. Request: `{"connection_id": "uuid", "resources": ["tickets", "users"]}`
 
 Sync states are created with `schedule_enabled=True` and:
-- **5-minute interval** for `tickets` and `articles` (incremental sync — only fetches changes)
-- **60-minute interval** for `sections` and `categories` (full fetch)
+- **2-hour interval** for `tickets` and `articles` (scheduler is fallback — webhooks handle realtime)
+- **24-hour interval** for `sections` and `categories` (rarely change)
 
 Response (202):
 ```json
@@ -104,7 +104,7 @@ Response (202):
 }
 ```
 
-**Delete handling (BYOP):** For tickets, when a record is deleted in Zendesk, the incremental export reports it as deleted. sync_hq automatically removes the corresponding row from the BYOP table.
+**Delete handling (BYOP):** Tickets deleted in Zendesk are detected via the incremental export (`status: "deleted"`) and automatically removed during sync. Articles use a **daily reconciliation job** — Zendesk's incremental articles API omits deleted articles, so sync_hq fetches all live article IDs, diffs against the DB, and hard-deletes stale records.
 
 #### POST /v1/syncs/{sync_state_id}/trigger
 Trigger sync (202, background). Returns 409 if already running.
@@ -114,7 +114,7 @@ Sync status with recent runs.
 ```json
 {
   "sync_state_id": "uuid", "status": "idle", "last_cursor": "...", "retry_count": 0,
-  "recent_runs": [{"id": "uuid", "status": "completed", "records_fetched": 150, "records_written": 150, "records_deleted": 0}]
+  "recent_runs": [{"id": "uuid", "status": "completed", "records_fetched": 150, "records_written": 150, "records_deleted": 0, "trigger_type": "webhook"}]
 }
 ```
 
@@ -161,7 +161,37 @@ Response: `{"success": true, "message": "Connection successful, write permission
 
 ---
 
-## Webhook Endpoints
+## Webhook Ingest (Nango Forwarding)
+
+#### POST /v1/webhooks/nango
+Receive forwarded webhooks from Nango. **No API key required** — uses HMAC-SHA256 signature verification via `X-Nango-Signature` header.
+
+When Zendesk data changes, Nango forwards the webhook here. sync_hq verifies the signature, maps the event to a resource (tickets/articles), and triggers an incremental sync in the background.
+
+**Headers:** `X-Nango-Signature: <hmac-sha256-hex>`
+
+**Request body (from Nango):**
+```json
+{
+  "from": "zendesk",
+  "type": "forward",
+  "connectionId": "nango-connection-id",
+  "providerConfigKey": "zendesk",
+  "payload": {"type": "ticket", "id": 123}
+}
+```
+
+**Responses:**
+- `{"status": "accepted", "resources": ["tickets"]}` — sync triggered
+- `{"status": "debounced", "reason": "..."}` — skipped (running or recently synced)
+- `{"status": "ignored", "reason": "..."}` — no mapping or unknown connection
+- `401` — invalid/missing signature
+
+**Debouncing:** Skips if resource is already syncing or was synced within last 60s. Scheduler fallback (every 2hr) catches anything missed.
+
+---
+
+## Outbound Webhook Endpoints (Svix)
 
 #### POST /v1/settings/webhooks
 Register webhook. Request: `{"url": "https://...", "description": "..."}`. Response (201): `{"id": "ep_...", "url": "..."}`

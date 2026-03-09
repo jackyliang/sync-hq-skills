@@ -144,3 +144,10 @@ curl -X PUT $SYNC_HQ_API_URL/v1/syncs/<sync_state_id>/schedule \
   -H "Content-Type: application/json" \
   -d '{"schedule_enabled": true, "interval_minutes": 30}'
 ```
+
+## Deletion detection
+
+sync_hq automatically detects and removes deleted records:
+
+- **Tickets**: Zendesk's incremental API includes deleted tickets (`status: "deleted"`). These are hard-deleted from the synced DB during normal sync.
+- **Articles**: Zendesk's incremental articles API does **not** include deleted/archived articles. A daily reconciliation job fetches all live article IDs from Zendesk, compares against the DB, and hard-deletes stale records. This runs automatically via the scheduler (~every 24 hours). A safety guard skips deletion if Zendesk returns 0 articles (prevents mass deletion on API errors).

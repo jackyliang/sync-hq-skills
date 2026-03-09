@@ -74,9 +74,17 @@ curl -X POST $SYNC_HQ_API_URL/v1/syncs/<sync_state_id>/trigger \
   -H "X-API-Key: $SYNC_HQ_API_KEY"
 ```
 
-**Auto-scheduling:** Syncs are automatically scheduled when created:
-- **Tickets and articles** — every 5 minutes (incremental sync, fetches only changes)
-- **Sections and categories** — every 60 minutes (full fetch)
+**Sync triggers:** Tickets and articles sync via two mechanisms:
+- **Webhook (primary)** — Nango forwards Zendesk webhooks to `POST /v1/webhooks/nango`, triggering near-realtime syncs when data changes
+- **Scheduler (fallback)** — every 2 hours as a safety net
+
+Sections and categories sync via scheduler only (every 24 hours).
+
+Each sync run records its `trigger_type`: `webhook`, `scheduled`, or `manual`.
+
+**Deletion detection:**
+- **Tickets** — Zendesk's incremental API includes deleted tickets (`status: "deleted"`), automatically removed during sync
+- **Articles** — Zendesk's incremental API omits deleted/archived articles with no signal. A **daily reconciliation job** fetches all live article IDs from Zendesk, diffs against the synced DB, and hard-deletes stale records. Skips if Zendesk returns 0 articles (safety guard).
 
 To override the default schedule, use `PUT /v1/syncs/{sync_state_id}/schedule`:
 
