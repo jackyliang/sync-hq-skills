@@ -63,7 +63,7 @@ Your project needs these for the agent to make API calls:
 
 | Variable | Description |
 |----------|-------------|
-| `SYNC_HQ_API_URL` | sync_hq base URL (e.g., `https://api.sync-hq.com`) |
+| `SYNC_HQ_API_URL` | sync_hq base URL (e.g., `https://api.synchq.co`) |
 | `SYNC_HQ_API_KEY` | Your API key (starts with `sk_live_`) |
 | `SYNC_HQ_DEV_ID` | Your developer ID (for BYOP schema naming) |
 
