@@ -99,7 +99,7 @@ When answerhq receives the webhook, it:
 6. **Generates embeddings** — sends chunks to OpenRouter's embedding API
 7. **Stores in pgvector** — inserts chunks into Supabase's `chunks` table with `source="connector"`
 
-Old chunks for the same `sync_state_id` are deleted before new ones are inserted (full rebuild).
+Old chunks are deleted only after new ones are successfully inserted — if embedding fails mid-indexing, existing chunks are preserved so the assistant keeps working.
 
 ### 5. User disconnects Zendesk
 
