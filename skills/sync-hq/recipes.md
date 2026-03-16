@@ -89,12 +89,16 @@ Logs and sync metadata always live in sync_hq's cloud, even with BYOP.
 async def handle_sync_event(payload: dict):
     match payload["type"]:
         case "sync.completed":
-            schema = payload["schema_name"]
-            resource = payload["resource"]
-            await rebuild_search_index(schema, resource)
+            # Payload includes: connection_id, end_user_id, resource, provider,
+            # sync_state_id, schema_name, records_fetched, records_written, completed_at
+            await index_connector_data(
+                sync_state_id=payload["sync_state_id"],
+                org_id=payload["end_user_id"],
+                resource_type=payload["resource"],
+                provider=payload["provider"],
+            )
 
         case "sync.failed":
-            # Fetch detailed error info
             status = await sync_hq_client.get(
                 f"/v1/syncs/{payload['sync_state_id']}/status"
             )

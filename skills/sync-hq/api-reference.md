@@ -205,6 +205,33 @@ Delete webhook.
 #### GET /v1/settings/webhooks/portal
 Get Svix dashboard URL. Response: `{"portal_url": "https://app.svix.com/..."}`
 
+#### Event Payloads
+
+**`sync.completed`** — fired after a successful sync run:
+```json
+{
+  "connection_id": "uuid",
+  "end_user_id": "org-id",
+  "resource": "articles",
+  "provider": "zendesk",
+  "sync_state_id": "uuid",
+  "schema_name": "sync__prefix__org_id",
+  "records_fetched": 50,
+  "records_written": 50,
+  "completed_at": "2026-03-16T..."
+}
+```
+
+**`sync.failed`** — fired when a sync run fails:
+```json
+{
+  "connection_id": "uuid",
+  "end_user_id": "org-id",
+  "resource": "articles",
+  "error": "Connection timed out"
+}
+```
+
 ---
 
 ## Admin Endpoints
