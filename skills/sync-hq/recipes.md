@@ -17,7 +17,7 @@ curl -X POST $SYNC_HQ_API_URL/v1/connections/confirm \
   -d '{"end_user_id": "customer_123", "provider": "zendesk"}'
 # → Save connection id
 
-# 3. Create sync (auto-scheduled: tickets every 5min, sections/categories every 60min)
+# 3. Create sync (auto-scheduled: tickets/articles every 2hr, sections/categories every 24hr)
 curl -X POST $SYNC_HQ_API_URL/v1/syncs \
   -H "X-API-Key: $SYNC_HQ_API_KEY" \
   -H "Content-Type: application/json" \
@@ -128,7 +128,7 @@ curl -X POST $SYNC_HQ_API_URL/v1/connections/<connection_id>/test \
 
 ## Set up webhooks for sync events
 
-Syncs are auto-scheduled on creation (tickets/articles every 5min, sections/categories every 60min). To receive notifications when syncs complete or fail, register a webhook:
+Syncs are auto-scheduled on creation (tickets/articles every 2 hours with webhook-triggered near-realtime updates, sections/categories every 24 hours). To receive notifications when syncs complete or fail, register a webhook:
 
 ```bash
 # Register webhook

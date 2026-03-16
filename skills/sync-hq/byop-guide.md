@@ -83,10 +83,10 @@ Get your developer_id: `GET /v1/developers/me` → `id` field.
 
 | Resource | Sync type | Interval | Deletes auto-removed? |
 |----------|-----------|----------|-----------------------|
-| `tickets` | Incremental (changes only) | 5 min | Yes |
-| `articles` | Incremental (changes only) | 5 min | No |
-| `sections` | Full fetch | 60 min | No |
-| `categories` | Full fetch | 60 min | No |
+| `tickets` | Incremental (changes only) | 2 hours (webhooks for near-realtime) | Yes |
+| `articles` | Incremental (changes only) | 2 hours (webhooks for near-realtime) | No (daily reconciliation) |
+| `sections` | Full fetch | 24 hours | No |
+| `categories` | Full fetch | 24 hours | No |
 
 - **Incremental sync** (tickets, articles): After the initial full fetch, only records that changed since the last sync are fetched. Much faster and uses fewer API calls.
 - **Full fetch** (sections, categories): All records are fetched every time.
