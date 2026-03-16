@@ -101,7 +101,15 @@ When answerhq receives the webhook, it:
 
 Old chunks for the same `sync_state_id` are deleted before new ones are inserted (full rebuild).
 
-### 5. AI assistant searches the chunks
+### 5. User disconnects Zendesk
+
+When a user disconnects from the dashboard, answerhq's `DELETE /api/connectors/connections/{org}/{provider}` does two things:
+1. Calls sync_hq to delete the connection (which drops the BYOP schema and synced data)
+2. Deletes all connector chunks for that assistant from pgvector
+
+This prevents orphaned chunks from being searched by the AI assistant after the data source is gone.
+
+### 6. AI assistant searches the chunks
 
 When a user asks the assistant a question, `search_chunks()` runs a cosine similarity search across ALL chunk sources (website, article, connector). Connector chunks are automatically included — no special handling needed.
 
