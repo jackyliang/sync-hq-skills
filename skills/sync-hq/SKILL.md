@@ -29,7 +29,7 @@ sync_hq syncs third-party data (Zendesk, etc.) into Postgres so AI agents can qu
 2. Set environment variables:
 
 ```
-SYNC_HQ_API_URL=https://api.sync-hq.com   # or http://localhost:8000
+SYNC_HQ_API_URL=https://api.synchq.co   # or http://localhost:8001 for local dev
 SYNC_HQ_API_KEY=sk_live_...
 ```
 
