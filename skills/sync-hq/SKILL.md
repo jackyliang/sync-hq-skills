@@ -173,6 +173,7 @@ curl -X DELETE $SYNC_HQ_API_URL/v1/connections/{end_user_id}/{provider} \
 - **Full API reference**: See [api-reference.md](api-reference.md)
 - **BYOP setup and querying**: See [byop-guide.md](byop-guide.md)
 - **Recipes and troubleshooting**: See [recipes.md](recipes.md)
+- **Answer HQ integration**: See [answerhq-integration.md](answerhq-integration.md) — end-to-end flow from sync to AI search
 
 ## Choosing Resources to Sync
 
