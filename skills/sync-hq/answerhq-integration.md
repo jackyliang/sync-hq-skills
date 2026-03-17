@@ -113,6 +113,17 @@ This prevents orphaned chunks from being searched by the AI assistant after the 
 
 When a user asks the assistant a question, `search_chunks()` runs a cosine similarity search across ALL chunk sources (website, article, connector). Connector chunks are automatically included — no special handling needed.
 
+## Environment Variables (answerhq backend)
+
+These must be set in both `.env.local` (local dev) and **Render** (production backend, `answerhq` service):
+
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `SYNC_HQ_API_URL` | sync_hq base URL | `https://api.synchq.co` |
+| `SYNC_HQ_API_KEY` | API key for authenticating to sync_hq | `sk_live_...` |
+| `SYNC_HQ_DB_URL` | BYOP Postgres connection string (for reading synced data directly) | `postgresql://sync_hq_writer...` |
+| `SYNC_HQ_DEV_ID` | Developer ID (for schema name construction: `sync__{dev_prefix}__{org_id}`) | `171e499f-...` |
+
 ## Key Files
 
 | Repo | File | What it does |
